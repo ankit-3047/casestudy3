@@ -4,8 +4,31 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import cookieParser from "cookie-parser";
 import User from "./models/User.js";
+import swaggerJsdoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
 import { sequelize, Service, Plan,CustomerService,Archive } from "./models/index.js";
 const saltRounds = 10;
+const swaggerOptions = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Your API',
+      version: '1.0.0',
+      description: 'API for your service',
+    },
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+    },
+  },
+  apis: ['./server.js'], // files containing annotations as above
+};
+
 
 const app = express();
 app.use(express.json());
@@ -17,6 +40,8 @@ app.use(
   })
 );
 app.use(cookieParser());
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Middleware to verify if the user is authenticated
 const verifyUser = (req, res, next) => {
@@ -572,3 +597,639 @@ app.listen(8081, () => {
     })
     .catch((err) => console.error("Error creating tables:", err));
 });
+/**
+ * @swagger
+ * /:
+ *   get:
+ *     summary: Get the status of the server
+ *     tags: [Server]
+ *     responses:
+ *       200:
+ *         description: Server status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Status:
+ *                   type: string
+ *                 name:
+ *                   type: string
+ */
+
+/**
+ * @swagger
+ * /customers:
+ *   get:
+ *     summary: Get a list of customers
+ *     tags: [Customers]
+ *     security:
+ *       - Bearer: []
+ *     responses:
+ *       200:
+ *         description: List of customers
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   name:
+ *                     type: string
+ *                   email:
+ *                     type: string
+ *       403:
+ *         description: Access denied
+ */
+
+/**
+ * @swagger
+ * /register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Registration successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Status:
+ *                   type: string
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: Login a user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 Status:
+ *                   type: string
+ *                 role:
+ *                   type: string
+ *                 id:
+ *                   type: integer
+ *       401:
+ *         description: Incorrect credentials
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /createservice:
+ *   post:
+ *     summary: Create a new service
+ *     tags: [Services]
+ *     security:
+ *       - Bearer: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               service_name:
+ *                 type: string
+ *               plans:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     plan_name:
+ *                       type: string
+ *                     features:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *     responses:
+ *       200:
+ *         description: Service created successfully
+ *       400:
+ *         description: Invalid data provided
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /checkservice:
+ *   get:
+ *     summary: Check if a service exists
+ *     tags: [Services]
+ *     parameters:
+ *       - name: service_name
+ *         in: query
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Service existence check result
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 exists:
+ *                   type: boolean
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /getservices:
+ *   get:
+ *     summary: Get all services and their plans
+ *     tags: [Services]
+ *     responses:
+ *       200:
+ *         description: List of services and their plans
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   service_name:
+ *                     type: string
+ *                   id:
+ *                     type: integer
+ *                   plans:
+ *                     type: object
+ *                     additionalProperties:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /updateservice/{id}:
+ *   put:
+ *     summary: Update an existing service
+ *     tags: [Services]
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               plans:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     plan_name:
+ *                       type: string
+ *                     features:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *     responses:
+ *       200:
+ *         description: Service plans updated successfully
+ *       404:
+ *         description: Service not found
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /deleteservice/{id}:
+ *   delete:
+ *     summary: Delete a service
+ *     tags: [Services]
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Service deleted successfully
+ *       404:
+ *         description: Service not found
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /services:
+ *   get:
+ *     summary: Get all services
+ *     tags: [Customer Services]
+ *     responses:
+ *       200:
+ *         description: List of services
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   service_name:
+ *                     type: string
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /plans:
+ *   get:
+ *     summary: Get all plans
+ *     tags: [Plans]
+ *     responses:
+ *       200:
+ *         description: List of plans
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   plan_name:
+ *                     type: string
+ *                   features:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /customer-service/enroll:
+ *   post:
+ *     summary: Enroll a customer in a service
+ *     tags: [Customer Services]
+ *     security:
+ *       - Bearer: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               customer_id:
+ *                 type: integer
+ *               service_id:
+ *                 type: integer
+ *               plan:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Service enrolled successfully
+ *       404:
+ *         description: Service or Plan not found
+ *       500:
+ *         description: Server error
+ */
+/**
+ * @swagger
+ * /customer-service/enroll:
+ *   post:
+ *     summary: Enroll a customer in a service
+ *     tags: [Customer Service]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - customer_id
+ *               - service_id
+ *               - plan
+ *             properties:
+ *               customer_id:
+ *                 type: integer
+ *               service_id:
+ *                 type: integer
+ *               plan:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Service enrolled successfully
+ *       404:
+ *         description: Service or Plan not found
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /customer/{id}:
+ *   delete:
+ *     summary: Remove a customer
+ *     tags: [Customer]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Customer removed successfully
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /customers:
+ *   get:
+ *     summary: Get all customers
+ *     tags: [Customer]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of customers
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   name:
+ *                     type: string
+ *                   email:
+ *                     type: string
+ *       404:
+ *         description: No customers found
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /customer/{customer_id}:
+ *   get:
+ *     summary: Get customer details and enrolled services
+ *     tags: [Customer]
+ *     parameters:
+ *       - in: path
+ *         name: customer_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Customer details and enrolled services
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 name:
+ *                   type: string
+ *                 email:
+ *                   type: string
+ *                 services_enrolled:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       service_id:
+ *                         type: integer
+ *                       service_name:
+ *                         type: string
+ *                       plan:
+ *                         type: string
+ *                       features:
+ *                         type: object
+ *       404:
+ *         description: Customer not found
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /customer-service/{customer_id}/service/{service_id}:
+ *   get:
+ *     summary: Get customer's current plan for a service
+ *     tags: [Customer Service]
+ *     parameters:
+ *       - in: path
+ *         name: customer_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: path
+ *         name: service_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Current plan name
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 plan_name:
+ *                   type: string
+ *       404:
+ *         description: Service not found for this customer
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /customer-service/update:
+ *   put:
+ *     summary: Update customer's service plan
+ *     tags: [Customer Service]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - customer_id
+ *               - service_id
+ *               - new_plan
+ *               - features
+ *             properties:
+ *               customer_id:
+ *                 type: integer
+ *               service_id:
+ *                 type: integer
+ *               new_plan:
+ *                 type: string
+ *               features:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Service plan updated successfully
+ *       400:
+ *         description: Update failed
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /plans/{planId}/service/{serviceId}:
+ *   get:
+ *     summary: Get plan features for a specific service
+ *     tags: [Plans]
+ *     parameters:
+ *       - in: path
+ *         name: planName
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: serviceId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Plan features
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 features:
+ *                   type: object
+ *       404:
+ *         description: Plan not found for the specified service
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /archive:
+ *   post:
+ *     summary: Archive a customer's service
+ *     tags: [Archive]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - customer_id
+ *               - service_id
+ *             properties:
+ *               customer_id:
+ *                 type: integer
+ *               service_id:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Service archived successfully
+ *       404:
+ *         description: Service or customer not found
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /customer-services/{service_id}:
+ *   delete:
+ *     summary: Delete a service from CustomerService table
+ *     tags: [Customer Service]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: service_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Service deleted successfully
+ *       404:
+ *         description: Service not found
+ *       500:
+ *         description: Server error
+ */
