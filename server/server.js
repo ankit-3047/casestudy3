@@ -549,7 +549,8 @@ const name=await User.findOne({ where: { id:customer_id } });
     }  if (!name) {
       return res.status(404).json({ Error: 'Id not found for this customer' });
     }
-
+//2181
+//8083
     // Archive the service
     await Archive.create({
       customer_id: customer_id,
@@ -582,6 +583,15 @@ app.delete('/customer-services/:service_id', verifyUser, async (req, res) => {
   } catch (err) {
     console.error('Error deleting service:', err);
     return res.status(500).json({ Error: 'Error deleting service' });
+  }
+});
+
+app.get('/archives', async (req, res) => {
+  try {
+      const archives = await Archive.findAll();
+      res.json(archives);
+  } catch (err) {
+      res.status(500).json({ error: 'Failed to fetch archive data' });
   }
 });
 

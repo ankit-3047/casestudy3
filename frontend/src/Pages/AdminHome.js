@@ -4,7 +4,7 @@ import AvailableServices from '../Components/AvailableServices';
 import { useState,useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-
+import { Link } from 'react-router-dom';
 const AdminHome = () => {
   const [auth, setAuth] = useState(false);
   
@@ -63,10 +63,16 @@ useEffect(() => {
   return (
     <div>
       <button onClick={handleLogout}>Logout</button>
+      <div>
+        <Link to="/archive">
+          <button className="archive-button">View Archived Services</button>
+        </Link>
+      </div>
       <AvailableServices />
       <h2>Create a New Service</h2>
       <CreateService />
       {/* <UpdateService /> */}
+      
       <h2>Customer List</h2>
       <ul>
         {Array.isArray(customers) ? (
@@ -81,6 +87,7 @@ useEffect(() => {
           <li>No customers available</li>
         )}
       </ul>
+      
   
       {selectedCustomer && (
         <div>
