@@ -29,9 +29,9 @@ const CustomerService = sequelize.define('CustomerService', {
         allowNull: true, // This can be optional
     }
 }, {
-    timestamps: false // Disable createdAt and updatedAt
+    tableName: 'CustomerServices', // Explicitly set the table name
+    timestamps: false
 });
-
 // Define the relationships
 User.hasMany(CustomerService, { foreignKey: 'customer_id' });   
 CustomerService.belongsTo(User, { foreignKey: 'customer_id' });

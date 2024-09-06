@@ -139,9 +139,9 @@ app.post("/login", async (req, res) => {
         );
         res.cookie("token", token);
         console.log(user.id)
-        return res  .json({ Status: "Success", role: user.role,id:user.id });
+        return res.json({ Status: "Success", role: user.role,id:user.id });
       } else {
-        return res.json({ Error: "Incorrect Password" });
+        return res.status(401).json({ Error: "Incorrect Password" });
       }
     } else {
       return res.json({ Error: "Unregistered user" });
@@ -607,6 +607,7 @@ app.listen(8081, () => {
     })
     .catch((err) => console.error("Error creating tables:", err));
 });
+export default app ;
 /**
  * @swagger
  * /:
